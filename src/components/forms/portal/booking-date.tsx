@@ -35,6 +35,23 @@ const BookAppointmentDate = ({
   loading,
   bookings,
 }: Props) => {
+  const today = React.useMemo(() => {
+    const current = new Date()
+    current.setHours(0, 0, 0, 0)
+    return current
+  }, [])
+
+  const normalizedBookings = React.useMemo(
+    () =>
+      bookings?.map((booking) => ({
+        ...booking,
+        date: new Date(booking.date),
+      })),
+    [bookings]
+  )
+
+  const selectedDateString = date ? date.toDateString() : null
+
   return (
     <div className="flex flex-col gap-5 justify-center">
       <div className="flex justify-center">
@@ -55,20 +72,19 @@ const BookAppointmentDate = ({
             selected={date}
             onSelect={onBooking}
             className="rounded-md border"
+            disabled={(day) => day < today}
           />
         </div>
         <div className="flex flex-col gap-5">
           {APPOINTMENT_TIME_SLOTS.map((slot, key) => {
-            const isSameDay =
-              !!date &&
-              bookings?.some((booking) =>
-                booking.slot === slot.slot &&
-                booking.date.getFullYear() === date.getFullYear() &&
-                booking.date.getMonth() === date.getMonth() &&
-                booking.date.getDate() === date.getDate()
-              )
+            const isSlotBooked =
+              !!selectedDateString &&
+              normalizedBookings?.some((booking) => {
+                if (booking.slot !== slot.slot) return false
+                return booking.date.toDateString() === selectedDateString
+              })
 
-            const isSelected = currentSlot === slot.slot && !isSameDay
+            const isSelected = currentSlot === slot.slot && !isSlotBooked
 
             return (
               <Label
@@ -77,20 +93,20 @@ const BookAppointmentDate = ({
               >
                 <Card
                   onClick={() => {
-                    if (!isSameDay) {
+                    if (!isSlotBooked) {
                       onSlot(slot.slot)
                     }
                   }}
                   className={cn(
                     'px-10 py-4 text-white font-semibold border-2 border-transparent bg-orange transition duration-150 ease-in-out',
-                    !isSameDay && 'cursor-pointer hover:bg-orange/90',
+                    !isSlotBooked && 'cursor-pointer hover:bg-orange/90',
                     isSelected && 'border-orange-500 ring-2 ring-orange-300',
-                    isSameDay &&
-                      'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300 hover:bg-gray-300 ring-0'
+                    isSlotBooked &&
+                      'bg-orange-300 text-gray-500 cursor-not-allowed border-gray-300 hover:bg-gray-300 ring-0'
                   )}
                 >
                   <Input
-                    disabled={isSameDay}
+                    disabled={isSlotBooked}
                     className="hidden"
                     type="radio"
                     value={slot.slot}
