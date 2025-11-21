@@ -58,49 +58,50 @@ const BookAppointmentDate = ({
           />
         </div>
         <div className="flex flex-col gap-5">
-          {APPOINTMENT_TIME_SLOTS.map((slot, key) => (
-            <Label
-              htmlFor={`slot-${key}`}
-              key={key}
-            >
-              <Card
-                onClick={() => onSlot(slot.slot)}
-                className={cn(
-                  currentSlot == slot.slot ? 'bg-grandis' : 'bg-peach',
-                  'px-10 py-4',
-                  bookings &&
-                    bookings.some(
-                      (booking) =>
-                        `${booking.date.getDate()}/${booking.date.getMonth()}` ===
-                          `${date?.getDate()}/${date?.getMonth()}` &&
-                        booking.slot == slot.slot
-                    )
-                    ? 'bg-gray-300'
-                    : 'cursor-pointer border-orange hover:bg-grandis transition duration-150 ease-in-out'
-                )}
+          {APPOINTMENT_TIME_SLOTS.map((slot, key) => {
+            const isSameDay =
+              !!date &&
+              bookings?.some((booking) =>
+                booking.slot === slot.slot &&
+                booking.date.getFullYear() === date.getFullYear() &&
+                booking.date.getMonth() === date.getMonth() &&
+                booking.date.getDate() === date.getDate()
+              )
+
+            const isSelected = currentSlot === slot.slot && !isSameDay
+
+            return (
+              <Label
+                htmlFor={`slot-${key}`}
+                key={key}
               >
-                <Input
-                  {...(bookings &&
-                  bookings.some(
-                    (booking) =>
-                      booking.date == date && booking.slot == slot.slot
-                  )
-                    ? {
-                        disabled: true,
-                      }
-                    : {
-                        disabled: false,
-                      })}
-                  className="hidden"
-                  type="radio"
-                  value={slot.slot}
-                  {...register('slot')}
-                  id={`slot-${key}`}
-                />
-                {slot.slot}
-              </Card>
-            </Label>
-          ))}
+                <Card
+                  onClick={() => {
+                    if (!isSameDay) {
+                      onSlot(slot.slot)
+                    }
+                  }}
+                  className={cn(
+                    'px-10 py-4 text-white font-semibold border-2 border-transparent bg-orange transition duration-150 ease-in-out',
+                    !isSameDay && 'cursor-pointer hover:bg-orange/90',
+                    isSelected && 'border-orange-500 ring-2 ring-orange-300',
+                    isSameDay &&
+                      'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300 hover:bg-gray-300 ring-0'
+                  )}
+                >
+                  <Input
+                    disabled={isSameDay}
+                    className="hidden"
+                    type="radio"
+                    value={slot.slot}
+                    {...register('slot')}
+                    id={`slot-${key}`}
+                  />
+                  {slot.slot}
+                </Card>
+              </Label>
+            )
+          })}
         </div>
       </div>
       <div className="flex gap-5 justify-center mt-5">
