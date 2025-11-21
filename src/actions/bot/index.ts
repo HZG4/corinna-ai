@@ -228,13 +228,9 @@ export const onAiChatBotAssistant = async (
 
               if the customer says something out of context or inapporpriate. Simply say this is beyond you and you will get a real user to continue the conversation. And add a keyword (realtime) at the end.
 
-              Ask the customer if they would like to book an appointment, if the customer agrees to book an appointment send them this link ${process.env.NEXT_PUBLIC_DOMAIN}/portal/${id}/appointment/${
-                checkCustomer?.customer[0].id
-              }
+              Ask the customer if they would like to book an appointment, if the customer agrees to book an appointment send them this link ${process.env.NEXT_PUBLIC_DOMAIN}/portal/${id}/appointment/${checkCustomer?.customer[0].id}
 
-              Ask if customer would like to buy a product, if the customer agrees redirect them to the payment page ${process.env.NEXT_PUBLIC_DOMAIN}/portal/${id}/payment/${
-                checkCustomer?.customer[0].id
-              }
+              Ask if customer would like to buy a product, if the customer agrees redirect them to the payment page ${process.env.NEXT_PUBLIC_DOMAIN}/portal/${id}/payment/${checkCustomer?.customer[0].id}
           `,
             },
             ...chat,
@@ -307,10 +303,11 @@ export const onAiChatBotAssistant = async (
 
           if (generatedLink) {
             const link = generatedLink[0]
+            const sanitizedLink = link.replace(/[)\]\.,]+$/, '')
             const response = {
               role: 'assistant',
               content: `Great! you can follow the link to proceed`,
-              link: link.slice(0, -1),
+              link: sanitizedLink,
             }
 
             await onStoreConversations(
