@@ -118,7 +118,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
                 key={camp.id}
                 className={cn(
                   'p-5 min-w-[600px] cursor-pointer',
-                  campaignId == camp.id ? 'bg-gray-50' : ''
+                  campaignId == camp.id ? 'bg-grey/100 border-[4px]' : ''
                 )}
                 onClick={() => onSelectCampaign(camp.id)}
               >
@@ -146,7 +146,18 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
                           title="Edit Email"
                           description="This email will be sent to campaign members"
                           trigger={
-                            <Card className="rounded-lg cursor-pointer bg-grandis py-2 px-5 font-semibold text-sm hover:bg-orange text-gray-700">
+                            <Card
+                              className="rounded-lg cursor-pointer bg-orange py-2 px-5 font-bold text-sm hover:bg-grandis text-gray-800"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                              }}
+                              onPointerDownCapture={(event) => {
+                                event.stopPropagation()
+                              }}
+                              onMouseDownCapture={(event) => {
+                                event.stopPropagation()
+                              }}
+                            >
                               Edit Email
                             </Card>
                           }
@@ -162,12 +173,20 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
                         <Button
                           variant="default"
                           className="rounded-lg"
-                          onClick={() =>
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
                             onBulkEmail(
                               campaign[i].customers.map((c) => c),
                               camp.id
                             )
-                          }
+                          }}
+                          onPointerDownCapture={(event) => {
+                            event.stopPropagation()
+                          }}
+                          onMouseDownCapture={(event) => {
+                            event.stopPropagation()
+                          }}
                         >
                           Send
                         </Button>

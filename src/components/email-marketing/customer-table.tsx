@@ -42,7 +42,7 @@ export const CustomerTable = ({
                 onClick={() => onSelect(c.email as string)}
                 className={cn(
                   'rounded-full w-5 h-5 border-4 cursor-pointer',
-                  select.includes(c.email as string) ? 'bg-orange' : 'bg-peach'
+                  select.includes(c.email as string) ? 'bg-orange' : 'bg-background'
                 )}
               />
             </TableCell>
@@ -53,7 +53,7 @@ export const CustomerTable = ({
                 description="Customer answers are stored by the bot when your customers respond back to the questions asked by the bot."
                 trigger={
                   <Card
-                    className="bg-grandis py-2 px-4 cursor-pointer text-gray-700 hover:bg-orange"
+                    className="bg-orange py-2 px-4 cursor-pointer text-gray-800 font-bold hover:bg-grandis"
                     onClick={() => onId(c.id)}
                   >
                     View

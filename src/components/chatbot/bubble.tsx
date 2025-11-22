@@ -15,19 +15,19 @@ type Props = {
 }
 
 const Bubble = ({ message, createdAt }: Props) => {
-  let d = new Date()
+  const d = new Date()
+  const isAssistant = message.role === 'assistant'
   const image = extractUUIDFromString(message.content)
-  console.log(message.link)
 
   return (
     <div
       className={cn(
         'flex gap-2 items-end',
-        message.role == 'assistant' ? 'self-start' : 'self-end flex-row-reverse'
+        isAssistant ? 'self-start' : 'self-end flex-row-reverse'
       )}
     >
-      {message.role == 'assistant' ? (
-        <Avatar className="w-5 h-5">
+      {isAssistant ? (
+        <Avatar className="w-5 h-5 bg-muted">
           <AvatarImage
             src="https://github.com/shadcn.png"
             alt="@shadcn"
@@ -35,22 +35,27 @@ const Bubble = ({ message, createdAt }: Props) => {
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       ) : (
-        <Avatar className="w-5 h-5">
+        <Avatar className="w-5 h-5 bg-orange/10 text-orange-600">
           <AvatarFallback>
-            <User />
+            <User className="h-3 w-3" />
           </AvatarFallback>
         </Avatar>
       )}
       <div
         className={cn(
           'flex flex-col gap-3 min-w-[200px] max-w-[300px] p-4 rounded-t-md',
-          message.role == 'assistant'
-            ? 'bg-muted rounded-r-md'
-            : 'bg-grandis rounded-l-md'
+          isAssistant
+            ? 'bg-muted rounded-r-md text-white'
+            : 'bg-orange rounded-l-md text-gray-800'
         )}
       >
         {createdAt ? (
-          <div className="flex gap-2 text-xs text-gray-600">
+          <div
+            className={cn(
+              'flex gap-2 text-xs font-bold',
+              isAssistant ? 'text-white/80' : 'text-gray-800'
+            )}
+          >
             <p>
               {createdAt.getDate()} {getMonthName(createdAt.getMonth())}
             </p>
@@ -60,7 +65,12 @@ const Bubble = ({ message, createdAt }: Props) => {
             </p>
           </div>
         ) : (
-          <p className="text-xs">
+          <p
+            className={cn(
+              'text-xs font-bold',
+              isAssistant ? 'text-white/80' : 'text-gray-800'
+            )}
+          >
             {`${d.getHours()}:${d.getMinutes()} ${
               d.getHours() > 12 ? 'pm' : 'am'
             }`}
@@ -75,11 +85,19 @@ const Bubble = ({ message, createdAt }: Props) => {
             />
           </div>
         ) : (
-          <p className="text-sm">
+          <p
+            className={cn(
+              'text-sm font-bold leading-relaxed',
+              isAssistant ? 'text-white' : 'text-gray-800'
+            )}
+          >
             {message.content.replace('(complete)', ' ')}
             {message.link && (
               <Link
-                className="underline font-bold pl-2"
+                className={cn(
+                  'underline font-bold pl-2',
+                  isAssistant ? 'text-white' : 'text-orange-800'
+                )}
                 href={message.link}
                 target="_blank"
               >

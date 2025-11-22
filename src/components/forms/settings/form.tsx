@@ -44,19 +44,35 @@ const SettingsForm = ({ id, name, chatBot, plan }: Props) => {
       onSubmit={onUpdateSettings}
     >
       <div className="flex flex-col gap-3">
-        <h2 className="font-bold text-2xl">Domain Settings</h2>
-        <Separator orientation="horizontal" />
-        <DomainUpdate
-          name={name}
-          register={register}
-          errors={errors}
-        />
-        <CodeSnippet id={id} />
-      </div>
+  <div className="flex items-center justify-between">
+    <h2 className="font-bold text-2xl">Domain Settings</h2>
+
+    <div className="flex gap-3">
+      <Button
+        onClick={onDeleteDomain}
+        variant="destructive"
+        type="button"
+        className="px-10 h-[40px]"
+      >
+        <Loader loading={deleting}>Delete Domain</Loader>
+      </Button>
+
+      <Button type="submit" className="px-10 h-[40px]">
+        <Loader loading={loading}>Save</Loader>
+      </Button>
+    </div>
+  </div>
+
+  <Separator orientation="horizontal" />
+
+  <DomainUpdate name={name} register={register} errors={errors} />
+  <CodeSnippet id={id} />
+</div>
+
       <div className="flex flex-col gap-3 mt-5">
         <div className="flex gap-4 items-center">
           <h2 className="font-bold text-2xl">Chatbot Settings</h2>
-          <div className="flex gap-1 bg-cream rounded-full px-3 py-1 text-xs items-center font-bold">
+          <div className="flex gap-1 bg-background rounded-full px-3 py-1 text-xs items-center font-bold">
             <PremiumBadge />
             Premium
           </div>
@@ -86,22 +102,7 @@ const SettingsForm = ({ id, name, chatBot, plan }: Props) => {
           </div>
         </div>
       </div>
-      <div className="flex gap-5 justify-end">
-        <Button
-          onClick={onDeleteDomain}
-          variant="destructive"
-          type="button"
-          className="px-10 h-[50px]"
-        >
-          <Loader loading={deleting}>Delete Domain</Loader>
-        </Button>
-        <Button
-          type="submit"
-          className="w-[100px] h-[50px]"
-        >
-          <Loader loading={loading}>Save</Loader>
-        </Button>
-      </div>
+      
     </form>
   )
 }
