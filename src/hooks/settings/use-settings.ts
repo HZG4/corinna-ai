@@ -129,15 +129,21 @@ export const useSettings = (id: string) => {
   })
 
   const onDeleteDomain = async () => {
-    setDeleting(true)
-    const deleted = await onDeleteUserDomain(id)
-    if (deleted) {
-      toast({
-        title: 'Success',
-        description: deleted.message,
-      })
+    try {
+      setDeleting(true)
+      const deleted = await onDeleteUserDomain(id)
+      if (deleted) {
+        toast({
+          title: 'Success',
+          description: deleted.message,
+        })
+        router.push('/dashboard')
+        router.refresh()
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
       setDeleting(false)
-      router.refresh()
     }
   }
   return {

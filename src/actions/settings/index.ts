@@ -1,6 +1,7 @@
 'use server'
 import { client } from '@/lib/prisma'
 import { clerkClient, currentUser } from '@clerk/nextjs'
+import { revalidatePath } from 'next/cache'
 
 export const onIntegrateDomain = async (domain: string, icon: string) => {
   const user = await currentUser()
@@ -335,6 +336,10 @@ export const onDeleteUserDomain = async (id: string) => {
       })
 
       if (deletedDomain) {
+        const domainSlug = deletedDomain.name.split('.')[0] || deletedDomain.name
+        revalidatePath('/dashboard')
+        revalidatePath('/settings')
+        revalidatePath(`/settings/${domainSlug}`)
         return {
           status: 200,
           message: `${deletedDomain.name} was deleted successfully`,
