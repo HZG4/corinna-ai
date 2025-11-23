@@ -134,7 +134,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
       <div>
         <div className="flex gap-3 justify-end">
           <Button
-            disabled={isSelected.length == 0}
+            disabled={isSelected.length === 0 || !campaignId}
             onClick={onAddCustomersToCampaign}
           >
             <Plus /> Add to campaign
@@ -232,7 +232,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
                 key={camp.id}
                 className={cn(
                   'p-5 min-w-[630px] cursor-pointer',
-                  campaignId == camp.id ? 'bg-grey/100 border-[4px]' : ''
+                  campaignId == camp.id ? 'bg-grey/100 border-[4px] border-orange' : ''
                 )}
                 onClick={() => onSelectCampaign(camp.id)}
               >
