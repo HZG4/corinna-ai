@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/utils'
 
 type DataTableProps = {
-  headers: string[]
+  headers: (string | React.ReactNode)[]
   children: React.ReactNode
 }
 

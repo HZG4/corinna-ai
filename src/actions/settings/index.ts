@@ -201,41 +201,71 @@ export const onGetCurrentDomainInfo = async (domain: string) => {
 
 export const onUpdateDomain = async (id: string, name: string) => {
   try {
-    //check if domain with name exists
+    const currentDomain = await client.domain.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        name: true,
+      },
+    })
+
+    if (!currentDomain) {
+      return {
+        status: 404,
+        message: 'Domain not found',
+      }
+    }
+
     const domainExists = await client.domain.findFirst({
       where: {
+        id: {
+          not: id,
+        },
         name: {
-          contains: name,
+          equals: name,
+          mode: 'insensitive',
         },
       },
     })
 
-    if (!domainExists) {
-      const domain = await client.domain.update({
-        where: {
-          id,
-        },
-        data: {
-          name,
-        },
-      })
-
-      if (domain) {
-        return {
-          status: 200,
-          message: 'Domain updated',
-        }
+    if (domainExists) {
+      return {
+        status: 400,
+        message: 'Domain with this name already exists',
       }
+    }
 
+    const updatedDomain = await client.domain.update({
+      where: {
+        id,
+      },
+      data: {
+        name,
+      },
+      select: {
+        name: true,
+      },
+    })
+
+    if (!updatedDomain) {
       return {
         status: 400,
         message: 'Oops something went wrong!',
       }
     }
 
+    const normalizeSlug = (value: string) =>
+      value.split('.')[0]?.toLowerCase() || value.toLowerCase()
+
+    revalidatePath('/dashboard')
+    revalidatePath(`/settings/${normalizeSlug(currentDomain.name)}`)
+    revalidatePath(`/settings/${normalizeSlug(updatedDomain.name)}`)
+
     return {
-      status: 400,
-      message: 'Domain with this name already exists',
+      status: 200,
+      message: 'Domain updated',
+      domain: updatedDomain.name,
     }
   } catch (error) {
     console.log(error)

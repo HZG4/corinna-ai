@@ -3,6 +3,7 @@ import {
   onBulkMailer,
   onCreateMarketingCampaign,
   onGetAllCustomerResponses,
+  onDeleteCampaign,
   onGetEmailTemplate,
   onSaveEmailTemplate,
 } from '@/actions/mail'
@@ -23,6 +24,11 @@ export const useEmailMarketing = () => {
   const [processing, setProcessing] = useState<boolean>(false)
   const [isId, setIsId] = useState<string | undefined>(undefined)
   const [editing, setEditing] = useState<boolean>(false)
+  const [deleting, setDeleting] = useState<boolean>(false)
+  const [campaignMembers, setCampaignMembers] = useState<string[]>([])
+  const [membersCampaignId, setMembersCampaignId] = useState<string | undefined>()
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  const [removingMembers, setRemovingMembers] = useState<boolean>(false)
 
   const {
     register,
@@ -62,24 +68,37 @@ export const useEmailMarketing = () => {
     }
   })
 
-  const onCreateEmailTemplate = SubmitEmail(async (values) => {
-    try {
-      setEditing(true)
-      const template = JSON.stringify(values.description)
-      const emailTemplate = await onSaveEmailTemplate(template, campaignId!)
-      if (emailTemplate) {
-        toast({
-          title: 'Success',
-          description: emailTemplate.message,
-        })
+  const onCreateEmailTemplate = (targetCampaignId: string) =>
+    SubmitEmail(async (values) => {
+      try {
+        if (!targetCampaignId) {
+          toast({
+            title: 'Something went wrong',
+            description: 'Unable to determine which campaign to update.',
+          })
+          return
+        }
+        setEditing(true)
+        const template = JSON.stringify(values.description)
+        const emailTemplate = await onSaveEmailTemplate(
+          template,
+          targetCampaignId
+        )
+        if (emailTemplate) {
+          toast({
+            title: 'Success',
+            description: emailTemplate.message,
+          })
+        }
+      } catch (error) {
+        console.log(error)
+      } finally {
         setEditing(false)
       }
-    } catch (error) {
-      console.log(error)
-    }
-  })
+    })
 
-  const onSelectCampaign = (id: string) => setCampaignId(id)
+  const onSelectCampaign = (id: string) =>
+    setCampaignId((prev) => (prev === id ? undefined : id))
 
   const onAddCustomersToCampaign = async () => {
     try {
@@ -92,6 +111,8 @@ export const useEmailMarketing = () => {
         })
         setProcessing(false)
         setCampaignId(undefined)
+        setCampaignMembers([])
+        setMembersCampaignId(undefined)
         router.refresh()
       }
     } catch (error) {
@@ -107,6 +128,17 @@ export const useEmailMarketing = () => {
     } else {
       setIsSelected((prev) => [...prev, email])
     }
+  }
+
+  const onBulkSelectEmails = (emails: string[], checked: boolean) => {
+    if (!emails.length) return
+    setIsSelected((prev) => {
+      if (checked) {
+        const merged = new Set([...prev, ...emails])
+        return Array.from(merged)
+      }
+      return prev.filter((email) => !emails.includes(email))
+    })
   }
 
   const onBulkEmail = async (emails: string[], campaignId: string) => {
@@ -125,6 +157,86 @@ export const useEmailMarketing = () => {
   }
 
   const onSetAnswersId = (id: string) => setIsId(id)
+
+  const onShowCampaignMembers = (id: string, members: string[]) => {
+    setMembersCampaignId(id)
+    setCampaignMembers(members)
+    setSelectedMembers([])
+  }
+
+  const onToggleMemberSelection = (email: string) => {
+    setSelectedMembers((prev) =>
+      prev.includes(email) ? prev.filter((item) => item !== email) : [...prev, email]
+    )
+  }
+
+  const onToggleAllMembers = (emails: string[], checked: boolean) => {
+    if (!emails.length) return
+    setSelectedMembers((prev) => {
+      if (checked) {
+        const merged = new Set([...prev, ...emails])
+        return Array.from(merged)
+      }
+      return prev.filter((email) => !emails.includes(email))
+    })
+  }
+
+  const onRemoveSelectedMembers = async () => {
+    if (!membersCampaignId || !selectedMembers.length) return
+    try {
+      setRemovingMembers(true)
+      const updatedMembers = campaignMembers.filter(
+        (member) => !selectedMembers.includes(member)
+      )
+      const response = await onAddCustomersToEmail(
+        updatedMembers,
+        membersCampaignId
+      )
+      if (response) {
+        toast({
+          title: 'Members removed',
+          description: 'Selected customers were removed from the campaign.',
+        })
+        setCampaignMembers(updatedMembers)
+        setSelectedMembers([])
+        router.refresh()
+      }
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setRemovingMembers(false)
+    }
+  }
+
+  const onResetMembersModal = () => {
+    setCampaignMembers([])
+    setMembersCampaignId(undefined)
+    setSelectedMembers([])
+  }
+
+  const onDeleteSelectedCampaign = async () => {
+    if (!campaignId) return
+    try {
+      setDeleting(true)
+      const deleted = await onDeleteCampaign(campaignId)
+      if (deleted) {
+        toast({
+          title: 'Success',
+          description: deleted.message,
+        })
+        setCampaignId(undefined)
+        setCampaignMembers([])
+        setMembersCampaignId(undefined)
+        setSelectedMembers([])
+        router.refresh()
+      }
+      return deleted
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return {
     onSelectedEmails,
@@ -145,6 +257,19 @@ export const useEmailMarketing = () => {
     onCreateEmailTemplate,
     editing,
     setValue,
+    onDeleteCampaign: onDeleteSelectedCampaign,
+    deleting,
+    onBulkSelectEmails,
+    campaignMembers,
+    setCampaignMembers,
+    onShowCampaignMembers,
+    selectedMembers,
+    onToggleMemberSelection,
+    onToggleAllMembers,
+    onRemoveSelectedMembers,
+    removingMembers,
+    membersCampaignId,
+    onResetMembersModal,
   }
 }
 

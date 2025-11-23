@@ -45,7 +45,7 @@ const Bubble = ({ message, createdAt }: Props) => {
         className={cn(
           'flex flex-col gap-3 min-w-[200px] max-w-[300px] p-4 rounded-t-md',
           isAssistant
-            ? 'bg-muted rounded-r-md text-white'
+            ? 'bg-secondary rounded-r-md text-secondary-foreground'
             : 'bg-orange rounded-l-md text-gray-800'
         )}
       >
@@ -53,7 +53,7 @@ const Bubble = ({ message, createdAt }: Props) => {
           <div
             className={cn(
               'flex gap-2 text-xs font-bold',
-              isAssistant ? 'text-white/80' : 'text-gray-800'
+              isAssistant ? 'text-secondary-foreground/80' : 'text-gray-800'
             )}
           >
             <p>
@@ -68,7 +68,7 @@ const Bubble = ({ message, createdAt }: Props) => {
           <p
             className={cn(
               'text-xs font-bold',
-              isAssistant ? 'text-white/80' : 'text-gray-800'
+              isAssistant ? 'text-secondary-foreground/80' : 'text-gray-800'
             )}
           >
             {`${d.getHours()}:${d.getMinutes()} ${
@@ -88,7 +88,7 @@ const Bubble = ({ message, createdAt }: Props) => {
           <p
             className={cn(
               'text-sm font-bold leading-relaxed',
-              isAssistant ? 'text-white' : 'text-gray-800'
+              isAssistant ? 'text-secondary-foreground' : 'text-gray-800'
             )}
           >
             {message.content.replace('(complete)', ' ')}
@@ -96,7 +96,9 @@ const Bubble = ({ message, createdAt }: Props) => {
               <Link
                 className={cn(
                   'underline font-bold pl-2',
-                  isAssistant ? 'text-white' : 'text-orange-800'
+                  isAssistant
+                    ? 'text-secondary-foreground'
+                    : 'text-orange-800'
                 )}
                 href={message.link}
                 target="_blank"

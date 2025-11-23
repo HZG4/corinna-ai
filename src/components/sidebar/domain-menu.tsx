@@ -27,7 +27,12 @@ const DomainMenu = ({ domains, min }: Props) => {
 
   return (
     <div className={cn('flex flex-col gap-3', min ? 'mt-6' : 'mt-3')}>
-      <div className="flex justify-center w-full items-center">
+      <div
+        className={cn(
+          'flex w-full items-center',
+          min ? 'justify-center' : 'justify-between'
+        )}
+      >
         {!min && <p className="text-xs text-gray-500">DOMAINS</p>}
         <AppDrawer
           description="add in your domain address to integrate your chatbot"

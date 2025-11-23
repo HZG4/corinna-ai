@@ -94,38 +94,59 @@ export const useSettings = (id: string) => {
 
   const onUpdateSettings = handleSubmit(async (values) => {
     setLoading(true)
-    if (values.domain) {
-      const domain = await onUpdateDomain(id, values.domain)
-      if (domain) {
-        toast({
-          title: 'Success',
-          description: domain.message,
-        })
+    let redirectSlug: string | null = null
+
+    try {
+      const trimmedDomain = values.domain?.trim()
+      if (trimmedDomain) {
+        const domain = await onUpdateDomain(id, trimmedDomain)
+        if (domain) {
+          toast({
+            title: domain.status === 200 ? 'Success' : 'Error',
+            description: domain.message,
+          })
+
+          if (domain.status === 200) {
+            const nextName = domain.domain ?? trimmedDomain
+            redirectSlug =
+              nextName.split('.')[0]?.toLowerCase() || nextName.toLowerCase()
+          }
+        }
       }
-    }
-    if (values.image[0]) {
-      const uploaded = await upload.uploadFile(values.image[0])
-      const image = await onChatBotImageUpdate(id, uploaded.uuid)
-      if (image) {
-        toast({
-          title: image.status == 200 ? 'Success' : 'Error',
-          description: image.message,
-        })
-        setLoading(false)
+
+      if (values.image?.[0]) {
+        const uploaded = await upload.uploadFile(values.image[0])
+        const image = await onChatBotImageUpdate(id, uploaded.uuid)
+        if (image) {
+          toast({
+            title: image.status == 200 ? 'Success' : 'Error',
+            description: image.message,
+          })
+        }
       }
-    }
-    if (values.welcomeMessage) {
-      const message = await onUpdateWelcomeMessage(values.welcomeMessage, id)
-      if (message) {
-        toast({
-          title: 'Success',
-          description: message.message,
-        })
+
+      if (values.welcomeMessage) {
+        const message = await onUpdateWelcomeMessage(values.welcomeMessage, id)
+        if (message) {
+          toast({
+            title: 'Success',
+            description: message.message,
+          })
+        }
       }
+
+      reset()
+
+      if (redirectSlug) {
+        router.replace(`/settings/${redirectSlug}`)
+      }
+
+      router.refresh()
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setLoading(false)
     }
-    reset()
-    router.refresh()
-    setLoading(false)
   })
 
   const onDeleteDomain = async () => {

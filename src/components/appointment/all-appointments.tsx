@@ -2,7 +2,7 @@ import { APPOINTMENT_TABLE_HEADER } from '@/constants/menu'
 import React from 'react'
 import { DataTable } from '../table'
 import { TableCell, TableRow } from '../ui/table'
-import { getMonthName } from '@/lib/utils'
+import { formatTime, getMonthName } from '@/lib/utils'
 import { CardDescription } from '../ui/card'
 
 type Props = {
@@ -35,17 +35,16 @@ const AllAppointments = ({ bookings }: Props) => {
                 {getMonthName(booking.date.getMonth())} {booking.date.getDate()}{' '}
                 {booking.date.getFullYear()}
               </div>
-              <div className="uppercase">{booking.slot}</div>
+              <div className="uppercase">
+                {booking.slot || formatTime(booking.date)}
+              </div>
             </TableCell>
             <TableCell>
               <div>
                 {getMonthName(booking.createdAt.getMonth())}{' '}
                 {booking.createdAt.getDate()} {booking.createdAt.getFullYear()}
               </div>
-              <div>
-                {booking.createdAt.getHours()} {booking.createdAt.getMinutes()}{' '}
-                {booking.createdAt.getHours() > 12 ? 'PM' : 'AM'}
-              </div>
+              <div>{formatTime(booking.createdAt)}</div>
             </TableCell>
             <TableCell className="text-right">
               {booking.Customer?.Domain?.name}

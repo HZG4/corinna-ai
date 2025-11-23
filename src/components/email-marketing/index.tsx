@@ -1,9 +1,9 @@
 'use client'
 import { useEmailMarketing } from '@/hooks/email-marketing/use-marketing'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { CustomerTable } from './customer-table'
 import { Button } from '../ui/button'
-import { Plus } from 'lucide-react'
+import { AlertTriangle, Plus } from 'lucide-react'
 import Modal from '../mondal'
 import { Card, CardContent, CardDescription, CardTitle } from '../ui/card'
 import { Loader } from '../loader'
@@ -12,6 +12,19 @@ import { cn, getMonthName } from '@/lib/utils'
 import CalIcon from '@/icons/cal-icon'
 import PersonIcon from '@/icons/person-icon'
 import { EditEmail } from './edit-email'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Checkbox } from '../ui/checkbox'
+import { DataTable } from '../table'
+import { TableCell, TableRow } from '../ui/table'
+import { ScrollArea } from '../ui/scroll-area'
 
 type Props = {
   domains: {
@@ -54,7 +67,59 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
     emailErrors,
     onCreateEmailTemplate,
     setValue,
+    onDeleteCampaign,
+    deleting,
+    onBulkSelectEmails,
+    campaignMembers,
+    onShowCampaignMembers,
+    selectedMembers,
+    onToggleMemberSelection,
+    onToggleAllMembers,
+    onRemoveSelectedMembers,
+    removingMembers,
+    onResetMembersModal,
   } = useEmailMarketing()
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [membersOpen, setMembersOpen] = useState(false)
+
+  useEffect(() => {
+    if (!campaignId) {
+      setDeleteOpen(false)
+    }
+  }, [campaignId])
+
+  const onToggleDeleteDialog = (open: boolean) => {
+    if (!campaignId && open) return
+    setDeleteOpen(open)
+  }
+
+  const onConfirmDelete = async () => {
+    const result = await onDeleteCampaign()
+    if (result?.status === 200) {
+      setDeleteOpen(false)
+    }
+  }
+
+  const membersSelectAll = campaignMembers.length
+    ? campaignMembers.every((email) => selectedMembers.includes(email))
+    : false
+  const membersIndeterminate =
+    campaignMembers.length > 0 && !membersSelectAll
+      ? campaignMembers.some((email) => selectedMembers.includes(email))
+      : false
+
+  const memberHeaders = [
+    <Checkbox
+      key="members-select-all"
+      aria-label="Select all campaign members"
+      checked={membersSelectAll ? true : membersIndeterminate ? 'indeterminate' : false}
+      disabled={!campaignMembers.length}
+      onCheckedChange={(value) =>
+        onToggleAllMembers(campaignMembers, value === true)
+      }
+    />,
+    'Email',
+  ]
 
   return (
     <div className="w-full flex-1 h-0 grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -62,6 +127,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
         domains={domains}
         onId={onSetAnswersId}
         onSelect={onSelectedEmails}
+        onSelectMany={onBulkSelectEmails}
         select={isSelected}
         id={isId}
       />
@@ -105,6 +171,54 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
               </Button>
             </form>
           </Modal>
+          <Dialog
+            open={deleteOpen}
+            onOpenChange={onToggleDeleteDialog}
+          >
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={!campaignId}
+              >
+                Delete Campaign
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Delete this campaign?</DialogTitle>
+                <DialogDescription>
+                  You are about to permanently remove the selected campaign and its email template configuration.
+                  This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-center gap-3">
+                <span className="rounded-full bg-destructive/20 p-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                </span>
+                <div className="space-y-1 text-sm">
+                  <p className="font-semibold text-destructive">Please confirm you want to proceed.</p>
+                </div>
+              </div>
+              <DialogFooter className="gap-2 sm:space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDeleteOpen(false)}
+                >
+                  Keep Campaign
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={onConfirmDelete}
+                  disabled={deleting}
+                >
+                  <Loader loading={deleting}>Delete Campaign</Loader>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Card className="p-2">
             <CardDescription className="font-bold">
               {subscription?.credits} credits
@@ -117,7 +231,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
               <Card
                 key={camp.id}
                 className={cn(
-                  'p-5 min-w-[600px] cursor-pointer',
+                  'p-5 min-w-[630px] cursor-pointer',
                   campaignId == camp.id ? 'bg-grey/100 border-[4px]' : ''
                 )}
                 onClick={() => onSelectCampaign(camp.id)}
@@ -132,12 +246,18 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
                           {camp.createdAt.getDate()}th
                         </CardDescription>
                       </div>
-                      <div className="flex gap-2">
+                      <button
+                        className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-medium transition hover:bg-muted/80"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onShowCampaignMembers(camp.id, camp.customers)
+                          setMembersOpen(true)
+                        }}
+                      >
                         <PersonIcon />
-                        <CardDescription>
-                          {camp.customers.length} customers added
-                        </CardDescription>
-                      </div>
+                        <span>{camp.customers.length} customers added</span>
+                      </button>
                     </div>
                     <div className="flex w-full justify-between items-center">
                       <CardTitle className="text-xl">{camp.name}</CardTitle>
@@ -167,7 +287,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
                             errors={emailErrors}
                             setDefault={setValue}
                             id={camp.id}
-                            onCreate={onCreateEmailTemplate}
+                            onCreate={onCreateEmailTemplate(camp.id)}
                           />
                         </Modal>
                         <Button
@@ -198,6 +318,59 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
             ))}
         </div>
       </div>
+      <Dialog
+        open={membersOpen}
+        onOpenChange={(open) => {
+          setMembersOpen(open)
+          if (!open) {
+            onResetMembersModal()
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Campaign members</DialogTitle>
+            <DialogDescription>
+              Review and manage the customers currently assigned to this campaign.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[320px] rounded-lg border border-border bg-muted/30 p-4">
+            {campaignMembers.length ? (
+              <DataTable headers={memberHeaders}>
+                {campaignMembers.map((member) => (
+                  <TableRow key={member}>
+                    <TableCell>
+                      <Checkbox
+                        aria-label={`Select ${member}`}
+                        checked={selectedMembers.includes(member)}
+                        onCheckedChange={() => onToggleMemberSelection(member)}
+                      />
+                    </TableCell>
+                    <TableCell>{member}</TableCell>
+                  </TableRow>
+                ))}
+              </DataTable>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                This campaign does not have any customers yet.
+              </div>
+            )}
+          </ScrollArea>
+          <DialogFooter className="mt-4 flex items-center justify-between gap-3 sm:flex-row">
+            <p className="text-sm text-muted-foreground">
+              {selectedMembers.length} selected
+            </p>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!selectedMembers.length || removingMembers}
+              onClick={onRemoveSelectedMembers}
+            >
+              <Loader loading={removingMembers}>Remove selected</Loader>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

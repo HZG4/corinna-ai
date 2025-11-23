@@ -196,6 +196,45 @@ export const onBulkMailer = async (email: string[], campaignId: string) => {
   }
 }
 
+export const onDeleteCampaign = async (campaignId: string) => {
+  try {
+    const user = await currentUser()
+    if (!user) return null
+
+    const campaign = await client.campaign.findFirst({
+      where: {
+        id: campaignId,
+        User: {
+          clerkId: user.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (!campaign) {
+      return {
+        status: 404,
+        message: 'Campaign not found',
+      }
+    }
+
+    await client.campaign.delete({
+      where: {
+        id: campaign.id,
+      },
+    })
+
+    return {
+      status: 200,
+      message: 'Campaign deleted',
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 export const onGetAllCustomerResponses = async (id: string) => {
   try {
     const user = await currentUser()

@@ -41,27 +41,34 @@ export const extractEmailsFromString = (text: string) => {
 }
 
 export const getMonthName = (month: number) => {
-  return month == 1
-    ? 'Jan'
-    : month == 2
-    ? 'Feb'
-    : month == 3
-    ? 'Mar'
-    : month == 4
-    ? 'Apr'
-    : month == 5
-    ? 'May'
-    : month == 6
-    ? 'Jun'
-    : month == 7
-    ? 'Jul'
-    : month == 8
-    ? 'Aug'
-    : month == 9
-    ? 'Sep'
-    : month == 10
-    ? 'Oct'
-    : month == 11
-    ? 'Nov'
-    : month == 12 && 'Dec'
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
+
+  if (month >= 0 && month < months.length) {
+    return months[month]
+  }
+
+  return ''
+}
+
+export const formatTime = (date: Date) => {
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+  const period = hours >= 12 ? 'PM' : 'AM'
+  const normalizedHours = hours % 12 || 12
+  const formattedMinutes = minutes.toString().padStart(2, '0')
+
+  return `${normalizedHours}:${formattedMinutes} ${period}`
 }
