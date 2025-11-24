@@ -2,8 +2,8 @@ import React from 'react'
 import { AccordionContent, AccordionItem, AccordionTrigger, Accordion as ShadcnAccordion } from '@/components/ui/accordion'
 
 type Props = {
-  trigger: string
-  content: string
+  trigger: React.ReactNode
+  content: React.ReactNode
 }
 
 const Accordion = ({ content, trigger }: Props) => {

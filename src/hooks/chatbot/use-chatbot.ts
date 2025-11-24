@@ -134,11 +134,15 @@ export const useChatBot = () => {
       if (response) {
         setOnAiTyping(false)
         if (response.live) {
-          setOnRealTime((prev) => ({
-            ...prev,
-            chatroom: response.chatRoom,
-            mode: response.live,
-          }))
+          if (response.chatRoom) {
+            setOnRealTime({
+              chatroom: response.chatRoom,
+              mode: response.live,
+            })
+          }
+          if (response.response) {
+            setOnChats((prev: any) => [...prev, response.response])
+          }
         } else {
           setOnChats((prev: any) => [...prev, response.response])
         }
@@ -169,11 +173,12 @@ export const useChatBot = () => {
       if (response) {
         setOnAiTyping(false)
         if (response.live) {
-          setOnRealTime((prev) => ({
-            ...prev,
-            chatroom: response.chatRoom,
-            mode: response.live,
-          }))
+          if (response.chatRoom) {
+            setOnRealTime({
+              chatroom: response.chatRoom,
+              mode: response.live,
+            })
+          }
         } else {
           setOnChats((prev: any) => [...prev, response.response])
         }
@@ -209,22 +214,17 @@ export const useRealTime = (
     >
   >
 ) => {
-  const counterRef = useRef(1)
-
   useEffect(() => {
     pusherClient.subscribe(chatRoom)
     pusherClient.bind('realtime-mode', (data: any) => {
       console.log('✅', data)
-      if (counterRef.current !== 1) {
-        setChats((prev: any) => [
-          ...prev,
-          {
-            role: data.chat.role,
-            content: data.chat.message,
-          },
-        ])
-      }
-      counterRef.current += 1
+      setChats((prev: any) => [
+        ...prev,
+        {
+          role: data.chat.role,
+          content: data.chat.message,
+        },
+      ])
     })
     return () => {
       pusherClient.unbind('realtime-mode')

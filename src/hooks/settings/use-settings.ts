@@ -1,11 +1,13 @@
 import {
   onChatBotImageUpdate,
   onCreateFilterQuestions,
+  onCreateKnowledgeBaseEntry,
   onCreateHelpDeskQuestion,
   onCreateNewDomainProduct,
   onDeleteUserDomain,
   onGetAllFilterQuestions,
   onGetAllHelpDeskQuestions,
+  onGetKnowledgeBaseEntries,
   onUpdateDomain,
   onUpdatePassword,
   onUpdateWelcomeMessage,
@@ -22,6 +24,8 @@ import {
   DomainSettingsSchema,
   FilterQuestionsProps,
   FilterQuestionsSchema,
+  KnowledgeBaseProps,
+  KnowledgeBaseSchema,
   HelpDeskQuestionsProps,
   HelpDeskQuestionsSchema,
 } from '@/schemas/settings.schema'
@@ -280,6 +284,64 @@ export const useFilterQuestions = (id: string) => {
     register,
     errors,
     isQuestions,
+  }
+}
+
+export const useKnowledgeBase = (id: string) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<KnowledgeBaseProps>({
+    resolver: zodResolver(KnowledgeBaseSchema),
+  })
+
+  const { toast } = useToast()
+  const [loading, setLoading] = useState<boolean>(false)
+  const [entries, setEntries] = useState<
+    { id: string; title: string; content: string; createdAt: Date; updatedAt: Date }[]
+  >([])
+
+  const onAddKnowledgeBaseEntry = handleSubmit(async (values) => {
+    setLoading(true)
+    const response = await onCreateKnowledgeBaseEntry(
+      id,
+      values.title,
+      values.content
+    )
+    if (response) {
+      setEntries(response.entries ?? [])
+      toast({
+        title: response.status === 200 ? 'Success' : 'Error',
+        description: response.message,
+      })
+      if (response.status === 200) {
+        reset()
+      }
+    }
+    setLoading(false)
+  })
+
+  const onGetKnowledgeBase = async () => {
+    setLoading(true)
+    const response = await onGetKnowledgeBaseEntries(id)
+    if (response) {
+      setEntries(response.entries ?? [])
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    onGetKnowledgeBase()
+  }, [])
+
+  return {
+    register,
+    errors,
+    loading,
+    entries,
+    onAddKnowledgeBaseEntry,
   }
 }
 

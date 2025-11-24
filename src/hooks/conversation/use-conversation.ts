@@ -43,7 +43,16 @@ export const useConversation = () => {
         const rooms = await onGetDomainChatRooms(value.domain)
         if (rooms) {
           setLoading(false)
-          setChatRooms(rooms.customer)
+          const sorted = [...rooms.customer].sort((a, b) => {
+            const aLatest = a.chatRoom[0]?.message[0]?.createdAt
+              ? new Date(a.chatRoom[0].message[0].createdAt).getTime()
+              : 0
+            const bLatest = b.chatRoom[0]?.message[0]?.createdAt
+              ? new Date(b.chatRoom[0].message[0].createdAt).getTime()
+              : 0
+            return bLatest - aLatest
+          })
+          setChatRooms(sorted)
         }
       } catch (error) {
         console.log(error)
