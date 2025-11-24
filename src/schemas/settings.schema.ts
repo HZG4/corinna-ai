@@ -24,6 +24,11 @@ export type FilterQuestionsProps = {
   question: string
 }
 
+export type KnowledgeBaseProps = {
+  title: string
+  content: string
+}
+
 export const AddDomainSchema = z.object({
   domain: z
     .string()
@@ -90,6 +95,11 @@ export const HelpDeskQuestionsSchema = z.object({
 
 export const FilterQuestionsSchema = z.object({
   question: z.string().min(1, { message: 'Question cannot be left empty' }),
+})
+
+export const KnowledgeBaseSchema = z.object({
+  title: z.string().min(1, { message: 'Title cannot be left empty' }),
+  content: z.string().min(1, { message: 'Content cannot be left empty' }),
 })
 
 export const AddProductSchema = z.object({

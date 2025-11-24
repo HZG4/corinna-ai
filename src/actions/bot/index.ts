@@ -13,9 +13,13 @@ const openai = new OpenAi({
 
 export const onStoreConversations = async (
   id: string,
-  message: string,
+  message: string | null | undefined,
   role: 'assistant' | 'user'
 ) => {
+  if (!message || message.trim().length === 0) {
+    return
+  }
+
   await client.chatRoom.update({
     where: {
       id,
@@ -82,6 +86,12 @@ export const onAiChatBotAssistant = async (
           },
           select: {
             question: true,
+          },
+        },
+        knowledgeBase: {
+          select: {
+            title: true,
+            content: true,
           },
         },
       },
@@ -209,6 +219,14 @@ export const onAiChatBotAssistant = async (
         // SCENARIO 1: CUSTOMER EMAIL IS KNOWN
         // GOAL: Filter, Book Immediately if interested, or Switch to Realtime
         // ============================================================
+        const knowledgeBaseContext = chatBotDomain.knowledgeBase
+          ?.map(
+            (entry) =>
+              `Title: ${entry.title}\nSummary: ${entry.content}`
+          )
+          .join('\n---\n')
+        const hasKnowledgeBase = Boolean(knowledgeBaseContext?.trim())
+
         const chatCompletion = await openai.chat.completions.create({
           messages: [
             {
@@ -219,17 +237,24 @@ export const onAiChatBotAssistant = async (
 
               STRICT INSTRUCTIONS:
 
+              0. **KNOWLEDGE BASE PRIORITY**:
+                 - You are provided with the following knowledge base entries:
+                   ${hasKnowledgeBase ? knowledgeBaseContext : 'No saved entries yet.'}
+                 - Always check whether a user's question can be answered with the knowledge base before doing anything else.
+                 - If a knowledge entry answers the question, respond directly using that information and do NOT switch to realtime unless the user explicitly rejects the answer or asks for a human.
+                 - When you rely on a knowledge entry, reference it naturally.
+
               1. **IMMEDIATE BOOKING**: 
                  - Analyze the customer's sentiment. 
-                 - IF the customer expresses a desire to book, shows high interest, says "yes", or asks for a time slot:
+                 - IF the customer expresses a desire to book appointment, shows high interest, says "yes":
                  - IGNORE the remaining questions.
                  - IMMEDIATELY output the appointment link: ${process.env.NEXT_PUBLIC_DOMAIN}/portal/${id}/appointment/${checkCustomer?.customer[0].id}
                  - OR if payment is required: ${process.env.NEXT_PUBLIC_DOMAIN}/portal/${id}/payment/${checkCustomer?.customer[0].id}
 
               2. **REALTIME HANDOFF**:
-                 - IF the customer asks a question outside the domain of booking, expresses confusion, frustration, or asks for a human:
-                 - You MUST simply output the keyword: (realtime)
-                 - Do NOT attempt to answer technical or out-of-scope questions yourself.
+            - Switch to realtime when you cannot answer using the knowledge base, the user explicitly asks for a human, or the user remains frustrated after a knowledge-base response.
+            - When escalating, you must include the exact keyword (realtime). Ideally return only "(realtime)" or a brief handoff sentence that ends with the keyword.
+            - Do NOT escalate to realtime if the knowledge base contains the requested information.
 
               3. **INFORMATION COLLECTION (Default)**:
                  - If the user is just answering prompts normally, proceed with the list of questions.
@@ -277,7 +302,11 @@ export const onAiChatBotAssistant = async (
               'assistant'
             )
 
-            return { response }
+            return {
+              live: true,
+              chatRoom: checkCustomer?.customer[0].chatRoom[0].id,
+              response,
+            }
           }
         }
         if (chat[chat.length - 1].content.includes('(complete)')) {

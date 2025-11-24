@@ -450,6 +450,81 @@ export const onGetAllHelpDeskQuestions = async (id: string) => {
   }
 }
 
+export const onCreateKnowledgeBaseEntry = async (
+  id: string,
+  title: string,
+  content: string
+) => {
+  try {
+    const entry = await client.knowledgeBase.create({
+      data: {
+        title,
+        content,
+        domainId: id,
+      },
+    })
+
+    if (!entry) {
+      return {
+        status: 400,
+        message: 'Oops! something went wrong',
+      }
+    }
+
+    const entries = await client.knowledgeBase.findMany({
+      where: {
+        domainId: id,
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    return {
+      status: 200,
+      message: 'Knowledge base entry added',
+      entries,
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const onGetKnowledgeBaseEntries = async (id: string) => {
+  try {
+    const entries = await client.knowledgeBase.findMany({
+      where: {
+        domainId: id,
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    return {
+      status: 200,
+      message: '',
+      entries,
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 export const onCreateFilterQuestions = async (id: string, question: string) => {
   try {
     const filterQuestion = await client.domain.update({

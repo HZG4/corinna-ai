@@ -39,6 +39,7 @@ model Domain {
   helpdesk        HelpDesk[]
   filterQuestions FilterQuestions[]
   products        Product[]
+  knowledgeBase   KnowledgeBase[]
 
   customer   Customer[]
   User       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -159,6 +160,16 @@ model Product {
   createdAt DateTime @default(now())
   Domain    Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId  String?  @db.Uuid
+}
+
+model KnowledgeBase {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Domain    Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domainId  String   @db.Uuid
 }
 
 enum Plans {

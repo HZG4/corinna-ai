@@ -4,6 +4,7 @@ import { HELP_DESK_TABS_MENU } from '@/constants/menu'
 import React from 'react'
 import HelpDesk from './help-desk'
 import FilterQuestions from './filter-questions'
+import KnowledgeBase from './knowledge-base'
 
 type Props = {
   id: string
@@ -28,6 +29,9 @@ const BotTrainingForm = ({ id }: Props) => {
         </TabsContent>
         <TabsContent value="questions">
           <FilterQuestions id={id} />
+        </TabsContent>
+        <TabsContent value="knowledge base">
+          <KnowledgeBase id={id} />
         </TabsContent>
       </TabsMenu>
     </div>
